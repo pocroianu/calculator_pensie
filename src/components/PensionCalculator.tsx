@@ -9,10 +9,15 @@ import { usePensionCalculator } from '../hooks/usePensionCalculator';
 const PensionCalculator: React.FC = () => {
   const { 
     inputs, 
+    handleInputChange,
     monthlyPension, 
     yearlyPension, 
     yearsUntilRetirement,
-    handleInputChange 
+    contributionPoints,
+    pensionDetails,
+    addWorkingPeriod,
+    removeWorkingPeriod,
+    averageGrossSalary
   } = usePensionCalculator();
 
   return (
@@ -32,7 +37,12 @@ const PensionCalculator: React.FC = () => {
             retirementYear={inputs.retirementYear}
             onChange={handleInputChange}
           />
-          <InputForm inputs={inputs} onChange={handleInputChange} />
+          <InputForm 
+            inputs={inputs} 
+            onChange={handleInputChange} 
+            onAddWorkingPeriod={addWorkingPeriod}
+            onRemoveWorkingPeriod={removeWorkingPeriod}
+          />
         </div>
         
         <div className="space-y-8">
@@ -40,12 +50,17 @@ const PensionCalculator: React.FC = () => {
             monthlyPension={monthlyPension} 
             yearlyPension={yearlyPension}
           />
-          <PensionStats 
+          <PensionStats
             birthDate={inputs.birthDate}
-            yearsUntilRetirement={yearsUntilRetirement}
             contributionYears={inputs.contributionYears}
-            hasSpecialConditions={inputs.hasSpecialConditions}
-            hasHazardousConditions={inputs.hasHazardousConditions}
+            workingPeriods={inputs.workingPeriods}
+            monthlyGrossSalary={inputs.monthlyGrossSalary}
+            yearsUntilRetirement={yearsUntilRetirement}
+            contributionPoints={contributionPoints}
+            referenceValue={inputs.referenceValue}
+            monthlyPension={monthlyPension}
+            yearlyPension={yearlyPension}
+            pensionDetails={pensionDetails}
           />
         </div>
       </div>

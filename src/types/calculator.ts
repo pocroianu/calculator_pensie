@@ -1,3 +1,11 @@
+import { WorkingCondition } from '../utils/pensionCalculations';
+
+export interface WorkingPeriod {
+  condition: WorkingCondition;
+  fromAge: number;
+  toAge: number;
+}
+
 export interface CalculatorInputs {
   // Personal Information
   birthDate: string;
@@ -9,10 +17,15 @@ export interface CalculatorInputs {
   overtimeHours: number;
   
   // Working Conditions
-  hasHazardousConditions: boolean;
-  hasSpecialConditions: boolean;
+  workingPeriod: WorkingPeriod;
   
-  // Historical Data
+  // Non-contributive Periods
+  militaryYears: number;
+  universityYears: number;
+  childCareYears: number;
+  medicalYears: number;
+  
+  // Calculation Details
   contributionPoints: number;
   referenceValue: number;
 }
