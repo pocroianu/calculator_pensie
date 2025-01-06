@@ -1,323 +1,235 @@
-import React from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
-import { calculateAge, isRetired } from '../utils/dateCalculations';
-import { WorkingPeriod, NonContributiveResult, WorkingConditionsResult } from '../utils/pensionCalculations';
+import { Calculator } from 'lucide-react';
+import { ContributionPeriod } from '../types/pensionTypes';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-interface PensionStatsProps {
+interface Props {
   birthDate: string;
-  contributionYears: number;
-  workingPeriods: WorkingPeriod[];
-  monthlyGrossSalary: number;
-  yearsUntilRetirement: number;
-  contributionPoints: number;
-  referenceValue: number;
-  monthlyPension: number;
-  yearlyPension: number;
-  pensionDetails: {
-    basePoints: number;
-    stabilityPoints: number;
-    workingConditions: WorkingConditionsResult;
-    nonContributive: NonContributiveResult;
-    total: number;
-  };
+  retirementYear: number;
+  contributionPeriods: ContributionPeriod[];
 }
 
-const PensionStats: React.FC<PensionStatsProps> = ({
+const REFERENCE_VALUE_2024 = 81.45; // Lei
+const AVERAGE_GROSS_SALARY_2024 = 6789; // Lei
+
+const formatCurrency = (value: number) => {
+  return `${value.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Lei`;
+};
+
+const PensionStats: React.FC<Props> = ({
   birthDate,
-  contributionYears,
-  workingPeriods,
-  monthlyGrossSalary,
-  yearsUntilRetirement,
-  contributionPoints,
-  referenceValue,
-  monthlyPension,
-  yearlyPension,
-  pensionDetails
+  retirementYear,
+  contributionPeriods = []
 }) => {
-  const currentAge = calculateAge(birthDate);
-  const retired = isRetired(birthDate);
-  const totalPoints = pensionDetails.total;
-
-  const formatCurrency = (amount: number = 0) => {
-    return new Intl.NumberFormat('ro-RO', {
-      style: 'currency',
-      currency: 'RON',
-      minimumFractionDigits: 2
-    }).format(amount);
+  // Calculate total contribution years
+  const getTotalYears = (periods: ContributionPeriod[]) => {
+    if (!periods) return 0;
+    return periods.reduce((total, period) => {
+      if (!period.fromDate || !period.toDate) return total;
+      const start = new Date(period.fromDate);
+      const end = new Date(period.toDate);
+      const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+      return total + years;
+    }, 0);
   };
 
-  const formatNumber = (num: number = 0, decimals: number = 2) => {
-    return Number(num).toFixed(decimals);
-  };
-
-  const getWorkingConditionLabel = (condition: string) => {
-    switch (condition) {
-      case 'groupI':
-        return 'Group I Work (+50%)';
-      case 'groupII':
-        return 'Group II Work (+25%)';
-      case 'special':
-        return 'Special Conditions (+50%)';
-      case 'other':
-        return 'Other Conditions (+50%)';
-      default:
-        return null;
+  // Calculate current age
+  const getCurrentAge = () => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
     }
+    return age;
   };
 
-  const getNonContributiveLabel = (type: string) => {
-    switch (type) {
-      case 'military':
-        return 'Military Service';
-      case 'university':
-        return 'University Studies';
-      case 'medical':
-        return 'Medical Leave';
-      case 'unemployment':
-        return 'Unemployment';
-      case 'disability':
-        return 'Disability';
-      case 'childCare':
-        return 'Child Care';
-      default:
-        return type;
+  // Calculate contribution points for a period
+  const getContributionPoints = (grossSalary: number) => {
+    return grossSalary / AVERAGE_GROSS_SALARY_2024;
+  };
+
+  // Calculate total contribution points
+  const getTotalPoints = () => {
+    return contributionPeriods.reduce((total, period) => {
+      if (!period.monthlyGrossSalary) return total;
+      const points = getContributionPoints(period.monthlyGrossSalary);
+      const years = period.fromDate && period.toDate ? 
+        (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+      return total + (points * years * 12); // multiply by 12 for monthly points
+    }, 0);
+  };
+
+  const currentAge = getCurrentAge();
+  const yearsUntilRetirement = retirementYear - new Date().getFullYear();
+  const contributionYears = getTotalYears(contributionPeriods);
+  const totalPoints = getTotalPoints();
+
+  // Calculate average monthly salary
+  const getAverageMonthlySalary = () => {
+    if (!contributionPeriods || contributionPeriods.length === 0) return 0;
+    const totalSalary = contributionPeriods.reduce((sum, period) => sum + (period.monthlyGrossSalary || 0), 0);
+    return totalSalary / contributionPeriods.length;
+  };
+
+  const averageMonthlySalary = getAverageMonthlySalary();
+
+  // Calculate monthly pension
+  const calculateMonthlyPension = () => {
+    // Basic formula: Total Points * Reference Value
+    let monthlyPension = totalPoints * REFERENCE_VALUE_2024;
+
+    // Apply working conditions bonuses
+    contributionPeriods.forEach(period => {
+      if (period.workingCondition) {
+        const years = period.fromDate && period.toDate ? 
+          (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+        
+        switch (period.workingCondition) {
+          case 'special':
+          case 'groupI':
+            monthlyPension *= (1 + 0.5 * years / contributionYears); // 50% bonus
+            break;
+          case 'groupII':
+            monthlyPension *= (1 + 0.25 * years / contributionYears); // 25% bonus
+            break;
+        }
+      }
+    });
+
+    // Apply stability bonus for extra years
+    if (contributionYears > 25) {
+      const extraYears = contributionYears - 25;
+      let stabilityBonus = 0;
+      
+      if (extraYears > 0) {
+        // 0.5 points per year for years 26-30
+        stabilityBonus += Math.min(extraYears, 5) * 0.5;
+        
+        if (extraYears > 5) {
+          // 0.75 points per year for years 31-35
+          stabilityBonus += Math.min(extraYears - 5, 5) * 0.75;
+          
+          if (extraYears > 10) {
+            // 1 point per year for years 36+
+            stabilityBonus += (extraYears - 10) * 1;
+          }
+        }
+      }
+      
+      monthlyPension += stabilityBonus * REFERENCE_VALUE_2024;
     }
+
+    return monthlyPension;
   };
 
-  // Prepare data for the doughnut chart
-  const chartData = {
-    labels: [
-      'Base Points',
-      pensionDetails.stabilityPoints > 0 ? 'Stability Points' : null,
-      ...pensionDetails.workingConditions.periods.map(p => 
-        `${getWorkingConditionLabel(p.condition)} (${p.years} years)`
-      ),
-      ...pensionDetails.nonContributive.periods.map(p => 
-        `${getNonContributiveLabel(p.type)} (${p.years} years)`
-      )
-    ].filter(Boolean),
-    datasets: [{
-      data: [
-        pensionDetails.basePoints,
-        pensionDetails.stabilityPoints,
-        ...pensionDetails.workingConditions.periods.map(p => p.points),
-        ...pensionDetails.nonContributive.periods.map(p => p.points)
-      ].filter(points => points > 0),
-      backgroundColor: [
-        'rgb(59, 130, 246)', // Base points - blue
-        'rgb(16, 185, 129)', // Stability points - green
-        // Working conditions - amber shades
-        'rgb(245, 158, 11)',
-        'rgb(217, 119, 6)',
-        'rgb(180, 83, 9)',
-        // Non-contributive - purple shades
-        'rgb(139, 92, 246)',
-        'rgb(124, 58, 237)',
-        'rgb(109, 40, 217)'
-      ]
-    }]
-  };
+  const monthlyPension = calculateMonthlyPension();
+  const yearlyPension = monthlyPension * 12;
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg space-y-8">
-      {/* Personal Timeline section - unchanged */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">Personal Timeline</h3>
-        <div className="grid gap-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Current Age:</span>
-            <span className="font-medium">{currentAge} years</span>
+    <div className="space-y-4">
+      {/* Estimated Pension Card */}
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl shadow-lg">
+        <div className="flex items-center gap-2 mb-4">
+          <Calculator className="w-5 h-5 text-blue-600" />
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Estimated Pension</h2>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Monthly Pension</div>
+            <div className="text-2xl sm:text-3xl font-bold text-blue-600">{formatCurrency(monthlyPension)}</div>
           </div>
           
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Contribution Period:</span>
-            <span className="font-medium">{contributionYears} years</span>
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Yearly Pension</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-500">{formatCurrency(yearlyPension)}</div>
           </div>
+          
+          <div className="text-xs text-gray-500 mt-2">
+            *Based on the 2024 Romanian pension calculation formula
+          </div>
+        </div>
+      </div>
 
-          {!retired && (
+      {/* Details Card */}
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg divide-y divide-gray-100">
+        {/* Personal Timeline section */}
+        <div className="py-4 first:pt-0">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4">Personal Timeline</h3>
+          <div className="grid gap-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Current Age:</span>
+              <span className="text-sm font-medium">{currentAge} years</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Contribution Period:</span>
+              <span className="text-sm font-medium">{contributionYears.toFixed(1)} years</span>
+            </div>
+
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Years Until Retirement:</span>
-              <span className="font-medium">{yearsUntilRetirement} years</span>
+              <span className="text-sm font-medium">{yearsUntilRetirement} years</span>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Contribution Details section */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">Contribution Details</h3>
-        <div className="grid gap-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Monthly Gross Salary:</span>
-            <span className="font-medium">{formatCurrency(monthlyGrossSalary)}</span>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Monthly Contribution Points:</span>
-            <span className="font-medium">
-              {formatNumber(totalPoints / (contributionYears * 12), 4)}
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Base Contribution Points:</span>
-            <span className="font-medium">{formatNumber(pensionDetails.basePoints)}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Total Points:</span>
+              <span className="text-sm font-medium">{totalPoints.toFixed(2)}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Working Conditions section */}
-      {pensionDetails.workingConditions.periods.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Working Conditions</h3>
-          <div className="space-y-4">
-            {pensionDetails.workingConditions.periods.map((period, index) => (
-              <div key={index} className="p-4 bg-amber-50 rounded-lg">
+        {/* Contribution Details section */}
+        <div className="py-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4">Contribution Details</h3>
+          <div className="grid gap-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Average Monthly Salary:</span>
+              <span className="text-sm font-medium">{formatCurrency(averageMonthlySalary)}</span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Number of Periods:</span>
+              <span className="text-sm font-medium">{contributionPeriods?.length || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Contribution Periods section */}
+        <div className="py-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-4">Contribution Periods</h3>
+          <div className="space-y-3">
+            {contributionPeriods?.map((period, index) => (
+              <div key={index} className="bg-gray-50 p-3 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-amber-800">
-                    {getWorkingConditionLabel(period.condition)}
-                  </span>
-                  <span className="text-sm text-amber-600">
-                    {period.years} years
-                  </span>
+                  <span className="text-sm font-medium text-gray-700">{period.company || 'Unnamed Company'}</span>
+                  <span className="text-sm text-gray-600">{formatCurrency(period.monthlyGrossSalary || 0)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-amber-600">Bonus Points:</span>
-                  <span className="font-medium text-amber-600">
-                    +{formatNumber(period.points)}
-                  </span>
+                <div className="text-xs text-gray-500">
+                  {period.fromDate ? new Date(period.fromDate).toLocaleDateString() : 'Start Date'} - 
+                  {period.toDate ? new Date(period.toDate).toLocaleDateString() : 'End Date'}
                 </div>
+                {period.workingCondition && period.workingCondition !== 'normal' && (
+                  <div className="mt-1 text-xs font-medium text-amber-600">
+                    {period.workingCondition} conditions
+                  </div>
+                )}
+                {period.nonContributiveType && (
+                  <div className="mt-1 text-xs font-medium text-purple-600">
+                    {period.nonContributiveType} period
+                  </div>
+                )}
               </div>
             ))}
-          </div>
-        </div>
-      )}
 
-      {/* Non-contributive Periods section */}
-      {pensionDetails.nonContributive.periods.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Non-contributive Periods</h3>
-          <div className="space-y-4">
-            {pensionDetails.nonContributive.periods.map((period, index) => (
-              <div key={index} className="p-4 bg-purple-50 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-purple-800">
-                    {getNonContributiveLabel(period.type)}
-                  </span>
-                  <span className="text-sm text-purple-600">
-                    {period.years} years
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-purple-600">Points:</span>
-                  <span className="font-medium text-purple-600">
-                    +{formatNumber(period.points)}
-                  </span>
-                </div>
+            {(!contributionPeriods || contributionPeriods.length === 0) && (
+              <div className="text-center py-4 text-gray-500">
+                No contribution periods added yet.
               </div>
-            ))}
+            )}
           </div>
         </div>
-      )}
-
-      {/* Stability Bonus section */}
-      {pensionDetails.stabilityPoints > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Stability Bonus</h3>
-          <div className="grid gap-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Extra Years:</span>
-              <span className="font-medium">{contributionYears - 25} years</span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Stability Points:</span>
-              <span className="font-medium text-green-600">+{formatNumber(pensionDetails.stabilityPoints)}</span>
-            </div>
-
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Breakdown:</span><br />
-                • 0.50 points/year for years 26-30<br />
-                • 0.75 points/year for years 31-35<br />
-                • 1.00 points/year for years 36-40<br />
-                • 1.00 points/year for years beyond 40
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Final Pension Calculation section */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">Final Pension Calculation</h3>
-        <div className="grid gap-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Total Points:</span>
-            <span className="font-medium">{formatNumber(totalPoints)}</span>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Reference Value:</span>
-            <span className="font-medium">{formatCurrency(referenceValue)}</span>
-          </div>
-
-          <div className="h-px bg-gray-200 my-2"></div>
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">Monthly Pension:</span>
-            <span className="text-lg font-bold text-blue-600">{formatCurrency(monthlyPension)}</span>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">Yearly Pension:</span>
-            <span className="text-lg font-bold text-blue-600">{formatCurrency(yearlyPension)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Points Distribution chart */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">Points Distribution</h3>
-        <div className="w-full h-64">
-          <Doughnut data={chartData} options={{ 
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  boxWidth: 12
-                }
-              },
-              tooltip: {
-                callbacks: {
-                  label: (context) => {
-                    const label = context.label || '';
-                    const value = context.formattedValue || '0';
-                    return `${label}: ${value} points`;
-                  }
-                }
-              }
-            }
-          }} />
-        </div>
-      </div>
-
-      {/* Calculation Formula section */}
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Calculation Formula</h4>
-        <p className="text-sm text-gray-600">
-          Monthly Pension = Total Points × Reference Value<br /><br />
-          Where Total Points = Base Points + Stability Points + Working Conditions Points + Non-contributive Points<br /><br />
-          • Base Points = Monthly Points × Contribution Years × 12<br />
-          • Monthly Points = Monthly Gross Salary ÷ Average Gross Salary<br />
-          • Stability Points = Additional points for years beyond 25 years of contribution<br />
-          • Working Conditions Points = Additional points based on special working conditions<br />
-          • Non-contributive Points = Points for periods like military service, university, etc.
-        </p>
       </div>
     </div>
   );
