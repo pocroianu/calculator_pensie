@@ -1,4 +1,4 @@
-import { ContributionPeriod } from "../types/pensionTypes";
+import { ContributionPeriod, PensionDetails } from "../types/pensionTypes";
 
 export const REFERENCE_VALUE_2024 = 81.03; // Lei
 
@@ -229,12 +229,7 @@ export const calculateMonthlyPension = (
   birthDate: string,
 ): {
   monthlyPension: number;
-  details: {
-    contributionPoints: number;
-    stabilityPoints: number;
-    totalPoints: number;
-    nonContributivePoints: number;
-  };
+  details: PensionDetails;
 } => {
   let totalPoints = 0;
   let contributionPoints = 0;
@@ -266,13 +261,6 @@ export const calculateMonthlyPension = (
       nonContributivePoints
     }
   };
-};
-
-export const calculateContributionPoints = (
-  monthlyGrossSalary: number,
-  averageGrossSalary: number
-): number => {
-  return monthlyGrossSalary / averageGrossSalary;
 };
 
 export const calculateContributionPoint = (

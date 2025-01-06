@@ -31,7 +31,7 @@ export const usePensionCalculator = () => {
       },
       {
         fromDate: '2021-01-01' ,
-        toDate: '2024-12-31',
+        toDate: '2060-12-31',
         company: 'Company B',
         monthlyGrossSalary: 5050,
         workingCondition: 'normal'
@@ -50,22 +50,13 @@ export const usePensionCalculator = () => {
   });
 
   useEffect(() => {
-    // Calculate contribution points based on salary
-    // const points = inputs.contributionPeriods.reduce((acc, period) => {
-    //   const periodPoints = calculateContributionPoints(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
-    //   return acc + periodPoints;
-    // }, 0)
-
-    // setContributionPoints(points);
-
     // Update years until retirement
     const birthDate = new Date(inputs.birthDate);
     const retired = isRetired(birthDate.getFullYear().toString());
     const yearsUntil = retired ? 0 : inputs.retirementYear - currentYear;
+
     setYearsUntilRetirement(yearsUntil);
 
-    // Calculate pension with non-contributive periods
-    const nonContributivePeriods: NonContributivePeriod[] = [];
 
     // Calculate pension
     const result = calculateMonthlyPension(

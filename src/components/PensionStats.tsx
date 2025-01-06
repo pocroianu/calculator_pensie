@@ -96,6 +96,23 @@ const PensionStats: React.FC<Props> = ({
               <span className="text-sm text-gray-600">Total Points:</span>
               <span className="text-sm font-medium">{pensionDetails.totalPoints.toFixed(2)}</span>
             </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Contribution Points:</span>
+              <span className="text-sm font-medium">{pensionDetails.contributionPoints.toFixed(2)}</span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Stability Points:</span>
+              <span className="text-sm font-medium">{pensionDetails.stabilityPoints.toFixed(2)}</span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Non-Contributive Points:</span>
+              <span className="text-sm font-medium">{pensionDetails.nonContributivePoints.toFixed(2)}</span>
+            </div>
+
+
           </div>
         </div>
 

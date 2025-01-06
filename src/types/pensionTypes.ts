@@ -17,22 +17,8 @@ export interface PensionInputs {
 }
 
 export interface PensionDetails {
-  basePoints: number;
+  contributionPoints: number;
   stabilityPoints: number;
-  workingConditions: {
-    points: number;
-    periods: Array<{
-      condition: WorkingCondition;
-      years: number;
-      points: number;
-    }>;
-  };
-  nonContributive: {
-    points: number;
-    periods: Array<{
-      type: NonContributivePeriodType;
-      years: number;
-      points: number;
-    }>;
-  };
+  nonContributivePoints: number;
+  totalPoints: number;
 }
