@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { PensionInputs } from '../types/pensionTypes';
 import { 
-  calculateContributionPoints, 
   calculateMonthlyPension, 
   NonContributivePeriod,
-  WorkingConditionsResult,
-  NonContributiveResult
 } from '../utils/pensionCalculations';
 import { isRetired } from '../utils/dateCalculations';
 
@@ -13,11 +10,9 @@ const REFERENCE_VALUE_2024 = 81.03;
 const AVERAGE_GROSS_SALARY_2024 = 6789; // Romanian average gross salary 2024
 
 export interface PensionDetails {
-  basePoints: number;
+  contributionPoints: number;
   stabilityPoints: number;
-  workingConditions: WorkingConditionsResult;
-  nonContributive: NonContributiveResult;
-  total: number;
+  totalPoints: number;
 }
 
 export const usePensionCalculator = () => {
@@ -49,20 +44,19 @@ export const usePensionCalculator = () => {
   const [yearsUntilRetirement, setYearsUntilRetirement] = useState<number>(0);
   const [contributionPoints, setContributionPoints] = useState<number>(0);
   const [pensionDetails, setPensionDetails] = useState<PensionDetails>({
-    basePoints: 0,
+    contributionPoints: 0,
     stabilityPoints: 0,
-    workingConditions: { bonus: 0, periods: [] },
-    nonContributive: { total: 0, periods: [] },
-    total: 0
+    totalPoints: 0
   });
 
   useEffect(() => {
     // Calculate contribution points based on salary
-    const points = calculateContributionPoints(inputs.contributionPeriods.reduce((acc, period) => {
-      const periodPoints = calculateContributionPoints(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
-      return acc + periodPoints;
-    }, 0));
-    setContributionPoints(points);
+    // const points = inputs.contributionPeriods.reduce((acc, period) => {
+    //   const periodPoints = calculateContributionPoints(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
+    //   return acc + periodPoints;
+    // }, 0)
+
+    // setContributionPoints(points);
 
     // Update years until retirement
     const birthDate = new Date(inputs.birthDate);
@@ -75,11 +69,8 @@ export const usePensionCalculator = () => {
 
     // Calculate pension
     const result = calculateMonthlyPension(
-      inputs.contributionPeriods.reduce((acc, period) => acc + period.contributionYears, 0),
-      points * inputs.contributionPeriods.reduce((acc, period) => acc + period.contributionYears, 0),
-      REFERENCE_VALUE_2024,
-      inputs.contributionPeriods.map(period => ({ condition: period.condition, fromAge: period.fromAge, toAge: period.toAge })),
-      nonContributivePeriods
+      inputs.contributionPeriods,
+      inputs.birthDate,
     );
 
     setMonthlyPension(result.monthlyPension);

@@ -5,7 +5,14 @@ import PensionStats from './PensionStats';
 import { usePensionCalculator } from '../hooks/usePensionCalculator';
 
 const PensionCalculator = () => {
-  const { inputs, handleInputChange } = usePensionCalculator();
+  const { 
+    inputs, 
+    handleInputChange, 
+    monthlyPension,
+    yearlyPension,
+    pensionDetails,
+    yearsUntilRetirement
+  } = usePensionCalculator();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -33,12 +40,16 @@ const PensionCalculator = () => {
             />
           </div>
 
-          {/* Results */}
+          {/* Stats */}
           <div>
             <PensionStats
               birthDate={inputs.birthDate}
               retirementYear={inputs.retirementYear}
               contributionPeriods={inputs.contributionPeriods}
+              monthlyPension={monthlyPension}
+              yearlyPension={yearlyPension}
+              pensionDetails={pensionDetails}
+              yearsUntilRetirement={yearsUntilRetirement}
             />
           </div>
         </div>

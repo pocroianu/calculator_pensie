@@ -1,10 +1,14 @@
 import { Calculator } from 'lucide-react';
-import { ContributionPeriod } from '../types/pensionTypes';
+import { ContributionPeriod, PensionDetails } from '../types/pensionTypes';
 
 interface Props {
   birthDate: string;
   retirementYear: number;
   contributionPeriods: ContributionPeriod[];
+  monthlyPension: number;
+  yearlyPension: number;
+  pensionDetails: PensionDetails;
+  yearsUntilRetirement: number;
 }
 
 const REFERENCE_VALUE_2024 = 81.45; // Lei
@@ -17,20 +21,12 @@ const formatCurrency = (value: number) => {
 const PensionStats: React.FC<Props> = ({
   birthDate,
   retirementYear,
-  contributionPeriods = []
+  contributionPeriods,
+  monthlyPension,
+  yearlyPension,
+  pensionDetails,
+  yearsUntilRetirement
 }) => {
-  // Calculate total contribution years
-  const getTotalYears = (periods: ContributionPeriod[]) => {
-    if (!periods) return 0;
-    return periods.reduce((total, period) => {
-      if (!period.fromDate || !period.toDate) return total;
-      const start = new Date(period.fromDate);
-      const end = new Date(period.toDate);
-      const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-      return total + years;
-    }, 0);
-  };
-
   // Calculate current age
   const getCurrentAge = () => {
     if (!birthDate) return 0;
@@ -44,87 +40,15 @@ const PensionStats: React.FC<Props> = ({
     return age;
   };
 
-  // Calculate contribution points for a period
-  const getContributionPoints = (grossSalary: number) => {
-    return grossSalary / AVERAGE_GROSS_SALARY_2024;
-  };
-
-  // Calculate total contribution points
-  const getTotalPoints = () => {
-    return contributionPeriods.reduce((total, period) => {
-      if (!period.monthlyGrossSalary) return total;
-      const points = getContributionPoints(period.monthlyGrossSalary);
-      const years = period.fromDate && period.toDate ? 
-        (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
-      return total + (points * years * 12); // multiply by 12 for monthly points
-    }, 0);
-  };
-
   const currentAge = getCurrentAge();
-  const yearsUntilRetirement = retirementYear - new Date().getFullYear();
-  const contributionYears = getTotalYears(contributionPeriods);
-  const totalPoints = getTotalPoints();
 
   // Calculate average monthly salary
   const getAverageMonthlySalary = () => {
-    if (!contributionPeriods || contributionPeriods.length === 0) return 0;
-    const totalSalary = contributionPeriods.reduce((sum, period) => sum + (period.monthlyGrossSalary || 0), 0);
-    return totalSalary / contributionPeriods.length;
+    return contributionPeriods.reduce((sum, period) => sum + (period.monthlyGrossSalary || 0), 0) / 
+      Math.max(contributionPeriods.length, 1);
   };
 
   const averageMonthlySalary = getAverageMonthlySalary();
-
-  // Calculate monthly pension
-  const calculateMonthlyPension = () => {
-    // Basic formula: Total Points * Reference Value
-    let monthlyPension = totalPoints * REFERENCE_VALUE_2024;
-
-    // Apply working conditions bonuses
-    contributionPeriods.forEach(period => {
-      if (period.workingCondition) {
-        const years = period.fromDate && period.toDate ? 
-          (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
-        
-        switch (period.workingCondition) {
-          case 'special':
-          case 'groupI':
-            monthlyPension *= (1 + 0.5 * years / contributionYears); // 50% bonus
-            break;
-          case 'groupII':
-            monthlyPension *= (1 + 0.25 * years / contributionYears); // 25% bonus
-            break;
-        }
-      }
-    });
-
-    // Apply stability bonus for extra years
-    if (contributionYears > 25) {
-      const extraYears = contributionYears - 25;
-      let stabilityBonus = 0;
-      
-      if (extraYears > 0) {
-        // 0.5 points per year for years 26-30
-        stabilityBonus += Math.min(extraYears, 5) * 0.5;
-        
-        if (extraYears > 5) {
-          // 0.75 points per year for years 31-35
-          stabilityBonus += Math.min(extraYears - 5, 5) * 0.75;
-          
-          if (extraYears > 10) {
-            // 1 point per year for years 36+
-            stabilityBonus += (extraYears - 10) * 1;
-          }
-        }
-      }
-      
-      monthlyPension += stabilityBonus * REFERENCE_VALUE_2024;
-    }
-
-    return monthlyPension;
-  };
-
-  const monthlyPension = calculateMonthlyPension();
-  const yearlyPension = monthlyPension * 12;
 
   return (
     <div className="space-y-4">
@@ -164,18 +88,13 @@ const PensionStats: React.FC<Props> = ({
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Contribution Period:</span>
-              <span className="text-sm font-medium">{contributionYears.toFixed(1)} years</span>
-            </div>
-
-            <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Years Until Retirement:</span>
               <span className="text-sm font-medium">{yearsUntilRetirement} years</span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Total Points:</span>
-              <span className="text-sm font-medium">{totalPoints.toFixed(2)}</span>
+              <span className="text-sm font-medium">{pensionDetails.totalPoints.toFixed(2)}</span>
             </div>
           </div>
         </div>

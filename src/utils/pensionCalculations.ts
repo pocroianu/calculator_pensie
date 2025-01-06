@@ -1,3 +1,5 @@
+import { ContributionPeriod } from "../types/pensionTypes";
+
 export const REFERENCE_VALUE_2024 = 81.03; // Lei
 
 export const GROUP_II_BONUS = 0.25; // 25% bonus for Group II work
@@ -15,6 +17,8 @@ export const TIER3_END = 40;
 export const TIER1_POINTS = 0.50;
 export const TIER2_POINTS = 0.75;
 export const TIER3_POINTS = 1.00;
+
+const AVERAGE_GROSS_SALARY_2024 = 6789; // Lei
 
 /**
  * Formula de calcul a pensiei de la data de 1 septembrie 2024 este:
@@ -57,38 +61,58 @@ export interface WorkingConditionsResult {
   }[];
 }
 
-export const calculateStabilityPoints = (contributionYears: number): number => {
+export const calculateStabilityPoints = (
+  contributionPeriods: ContributionPeriod[],
+  birthDate: string
+): number => {
   let totalPoints = 0;
-
-  // No stability points for less than minimum contribution years
-  if (contributionYears <= MINIMUM_CONTRIBUTION_YEARS) {
-    return 0;
-  }
-
-  // Calculate Tier 1 points (26-30 years)
-  const tier1Years = Math.min(
-    Math.max(0, contributionYears - TIER1_START + 1),
-    TIER1_END - TIER1_START + 1
+  
+  // Sort periods by date
+  const sortedPeriods = [...contributionPeriods].sort((a, b) => 
+    new Date(a.fromDate).getTime() - new Date(b.fromDate).getTime()
   );
-  totalPoints += tier1Years * TIER1_POINTS;
 
-  // Calculate Tier 2 points (31-35 years)
-  const tier2Years = Math.min(
-    Math.max(0, contributionYears - TIER2_START + 1),
-    TIER2_END - TIER2_START + 1
-  );
-  totalPoints += tier2Years * TIER2_POINTS;
+  // Calculate total contribution years and the age at which they occurred
+  let totalYears = 0;
+  sortedPeriods.forEach(period => {
+    if (!period.fromDate || !period.toDate) return;
+    
+    const start = new Date(period.fromDate);
+    const end = new Date(period.toDate);
+    const startAge = start.getFullYear() - new Date(birthDate).getFullYear();
+    const endAge = end.getFullYear() - new Date(birthDate).getFullYear();
+    
+    // Calculate years for each tier based on age
+    const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    totalYears += years;
 
-  // Calculate Tier 3 points (36-40 years)
-  const tier3Years = Math.min(
-    Math.max(0, contributionYears - TIER3_START + 1),
-    TIER3_END - TIER3_START + 1
-  );
-  totalPoints += tier3Years * TIER3_POINTS;
+    // No points before minimum years
+    if (totalYears <= MINIMUM_CONTRIBUTION_YEARS) return;
 
-  // Additional years beyond 40 get 1 point each
-  const extraYears = Math.max(0, contributionYears - TIER3_END);
-  totalPoints += extraYears * TIER3_POINTS;
+    // Calculate points for each tier
+    if (startAge >= 25) {
+      // Tier 1 (26-30 years)
+      if (startAge < 30) {
+        const tier1Years = Math.min(years, 30 - startAge);
+        totalPoints += tier1Years * TIER1_POINTS;
+      }
+      
+      // Tier 2 (31-35 years)
+      if (startAge < 35 && endAge >= 31) {
+        const tier2Years = Math.min(
+          years,
+          Math.min(35, endAge) - Math.max(31, startAge)
+        );
+        totalPoints += tier2Years * TIER2_POINTS;
+      }
+      
+      // Tier 3 (36+ years)
+      if (endAge >= 36) {
+        const tier3Years = endAge - Math.max(36, startAge);
+        totalPoints += tier3Years * TIER3_POINTS;
+      }
+    }
+  });
 
   return totalPoints;
 };
@@ -181,51 +205,77 @@ export const calculateNonContributivePoints = (
   };
 };
 
+
+
+/**
+ * Exemplu de calcul al pensiei: 
+ * Domnul Popescu, pensionar cu un stagiu de cotizare de 35 ani, a activat în condiții normale de muncă. 
+ * Pe lângă cei 35 de ani de lucru efectiv, el are și 4 ani de facultate, iar timp de 1 an a fost în șomaj.
+ * 
+ * Salariul mediu pe durata activității: 4.274 lei brut (2.500 lei net)
+ * Puncte de contributivitate: 35 x 0,64 (media anuală) = 22,4
+ * Puncte de stabilitate: 0,5 x 5 (ani munciți peste 25) + 0,75 x 5 (ani munciți peste 30) = 6,25
+ * Puncte asimilate / necontributive: 5 (facultate și șomaj) x 0,25 = 1,25
+ * Număr total puncte: 22,4 + 6,25 + 1,25 = 29,9
+ * Sumă pensie: 81 lei (VPR) x 29,9 = 2.422 lei
+ * 
+ * Din pensia totală, suma ce depășește 2.000 lei se impoziteaza cu 10%. Prin urmare, după aplicarea taxei pentru cei 422 lei ce depășesc pragul, 
+ * suma pe care pensionarul o va primi efectiv este de 2.380 lei. Insa, Ministerul Muncii a anunțat că de la 1 octombrie 2024, 
+ * pensiile de până la 3.000 lei nu vor mai fi impozitate și doar pentru suma ce depășește plafonul de 3.000 se va aplica impozitul de 10%.
+ * 
+ */
 export const calculateMonthlyPension = (
-  contributionYears: number,
-  contributionPoints: number,
-  referenceValue: number,
-  workingPeriods: WorkingPeriod[],
-  nonContributivePeriods: NonContributivePeriod[] = []
+  contributionPeriods: ContributionPeriod[],
+  birthDate: string,
 ): {
   monthlyPension: number;
   details: {
-    basePoints: number;
+    contributionPoints: number;
     stabilityPoints: number;
-    workingConditions: WorkingConditionsResult;
-    nonContributive: NonContributiveResult;
-    total: number;
+    totalPoints: number;
+    nonContributivePoints: number;
   };
 } => {
-  // Calculate stability points for extra contribution years
-  const stabilityPoints = calculateStabilityPoints(contributionYears);
+  let totalPoints = 0;
+  let contributionPoints = 0;
+  let stabilityPoints = 0;
+  let nonContributivePoints = 0;
 
-  // Calculate points for non-contributive periods
-  const nonContributive = calculateNonContributivePoints(nonContributivePeriods);
+  // Calculate contribution points
+  contributionPeriods.forEach((period: ContributionPeriod) => {
+    let point = calculateContributionPoint(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
+    let numberOfMonths = period.fromDate && period.toDate ? 
+      (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+    contributionPoints += point * numberOfMonths;  
+  });
 
-  // Calculate working conditions bonus
-  const workingConditions = calculateWorkingConditionsBonus(workingPeriods);
+  // Calculate stability points
+  stabilityPoints = calculateStabilityPoints(contributionPeriods, birthDate);
 
-  // Calculate total points
-  const totalPoints = 
+  totalPoints = 
     contributionPoints + 
-    stabilityPoints + 
-    workingConditions.bonus + 
-    nonContributive.total;
+    stabilityPoints +
+    nonContributivePoints;
 
   return {
-    monthlyPension: Math.round(totalPoints * referenceValue * 100) / 100,
+    monthlyPension: Math.round(totalPoints * 81),
     details: {
-      basePoints: contributionPoints,
+      contributionPoints,
       stabilityPoints,
-      workingConditions,
-      nonContributive,
-      total: totalPoints
+      totalPoints,
+      nonContributivePoints
     }
   };
 };
 
 export const calculateContributionPoints = (
+  monthlyGrossSalary: number,
+  averageGrossSalary: number
+): number => {
+  return monthlyGrossSalary / averageGrossSalary;
+};
+
+export const calculateContributionPoint = (
   monthlyGrossSalary: number,
   averageGrossSalary: number
 ): number => {
