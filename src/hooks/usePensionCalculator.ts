@@ -7,7 +7,7 @@ export const usePensionCalculator = () => {
   const currentYear = new Date().getFullYear();
   
   const [inputs, setInputs] = useState<CalculatorInputs>({
-    birthYear: currentYear - 30, // Default to 30 years old
+    birthDate: "1995-01-01", // Default to January 1st, 1995
     retirementYear: currentYear + 35, // Default to 35 years until retirement
     contributionYears: 25,
     monthlyGrossSalary: 5000,
@@ -23,7 +23,8 @@ export const usePensionCalculator = () => {
   const [yearsUntilRetirement, setYearsUntilRetirement] = useState<number>(0);
 
   useEffect(() => {
-    const retired = isRetired(inputs.birthYear);
+    const birthDate = new Date(inputs.birthDate);
+    const retired = isRetired(birthDate.getFullYear().toString());
     const yearsUntil = retired ? 0 : inputs.retirementYear - currentYear;
     setYearsUntilRetirement(yearsUntil);
 
@@ -47,7 +48,7 @@ export const usePensionCalculator = () => {
     const { name, value } = e.target;
     setInputs(prev => ({
       ...prev,
-      [name]: typeof value === 'boolean' ? value : (parseFloat(value) || value)
+      [name]: typeof value === 'boolean' ? value : (value)
     }));
   };
 

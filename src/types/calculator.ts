@@ -1,6 +1,6 @@
 export interface CalculatorInputs {
   // Personal Information
-  birthYear: number;
+  birthDate: string;
   retirementYear: number;
   
   // Contribution Details

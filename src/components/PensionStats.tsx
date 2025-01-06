@@ -7,7 +7,7 @@ import { calculateAge, isRetired } from '../utils/dateCalculations';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface PensionStatsProps {
-  birthYear: number;
+  birthDate: string;
   yearsUntilRetirement: number;
   contributionYears: number;
   hasSpecialConditions: boolean;
@@ -15,14 +15,14 @@ interface PensionStatsProps {
 }
 
 const PensionStats: React.FC<PensionStatsProps> = ({
-  birthYear,
+  birthDate,
   yearsUntilRetirement,
   contributionYears,
   hasSpecialConditions,
   hasHazardousConditions,
 }) => {
-  const currentAge = calculateAge(birthYear);
-  const retired = isRetired(birthYear);
+  const currentAge = calculateAge(birthDate);
+  const retired = isRetired(birthDate);
 
   const bonusData = {
     labels: ['Base Pension', 'Special Conditions Bonus', 'Hazardous Conditions Bonus'],

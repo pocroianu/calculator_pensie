@@ -41,7 +41,7 @@ const PensionCalculator: React.FC = () => {
             yearlyPension={yearlyPension}
           />
           <PensionStats 
-            birthYear={inputs.birthYear}
+            birthDate={inputs.birthDate}
             yearsUntilRetirement={yearsUntilRetirement}
             contributionYears={inputs.contributionYears}
             hasSpecialConditions={inputs.hasSpecialConditions}

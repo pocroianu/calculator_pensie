@@ -13,19 +13,6 @@ const InputForm: React.FC<InputFormProps> = ({ inputs, onChange }) => {
       <div className="bg-white p-6 rounded-xl shadow-lg space-y-6">
         <h3 className="text-lg font-semibold text-gray-700">Personal Details</h3>
         <div className="space-y-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Current Age
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="currentAge"
-              value={inputs.currentAge}
-              onChange={onChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
-          </div>
 
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
