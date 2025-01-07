@@ -1,225 +1,152 @@
 import React from 'react';
-import { HelpCircle, Plus, Trash2 } from 'lucide-react';
-import { CalculatorInputs } from '../types/calculator';
+import { CalendarDays, Plus, Clock, Info } from 'lucide-react';
+import { PensionInputs, ContributionPeriod as ContributionPeriodType } from '../types/pensionTypes';
+import { ContributionPeriod } from './ContributionPeriod';
+import Tooltip from './Tooltip';
+import { RETIREMENT_AGE } from '../utils/pensionCalculations';
 
 interface InputFormProps {
-  inputs: CalculatorInputs;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onAddWorkingPeriod: () => void;
-  onRemoveWorkingPeriod: (index: number) => void;
+  inputs: PensionInputs;
+  onChange: (field: keyof PensionInputs, value: any) => void;
 }
 
 const InputForm: React.FC<InputFormProps> = ({ 
   inputs, 
-  onChange, 
-  onAddWorkingPeriod,
-  onRemoveWorkingPeriod 
+  onChange 
 }) => {
+  const handleAddPeriod = () => {
+    const newPeriod: ContributionPeriodType = {
+      fromDate: '',
+      toDate: '',
+      company: '',
+      monthlyGrossSalary: 0,
+      workingCondition: 'normal'
+    };
+    
+    onChange('contributionPeriods', [...(inputs.contributionPeriods || []), newPeriod]);
+  };
+
+  const handleUpdatePeriod = (index: number, updatedPeriod: ContributionPeriodType) => {
+    const newPeriods = [...(inputs.contributionPeriods || [])];
+    newPeriods[index] = updatedPeriod;
+    onChange('contributionPeriods', newPeriods);
+  };
+
+  const handleRemovePeriod = (index: number) => {
+    const newPeriods = (inputs.contributionPeriods || []).filter((_, i) => i !== index);
+    onChange('contributionPeriods', newPeriods);
+  };
+
+  // Calculate suggested retirement year based on birth date
+  const calculateSuggestedRetirementYear = () => {
+    if (!inputs.birthDate) return null;
+    const birthYear = new Date(inputs.birthDate).getFullYear();
+    return birthYear + RETIREMENT_AGE;
+  };
+
+  const suggestedRetirementYear = calculateSuggestedRetirementYear();
+
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-xl shadow-lg space-y-6">
-        <h3 className="text-lg font-semibold text-gray-700">Personal Details</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Contribution Years
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="contributionYears"
-              value={inputs.contributionYears}
-              onChange={onChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
+      {/* Personal Information Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-gray-500" />
+            <h2 className="font-medium text-gray-900">Personal Information</h2>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-xl shadow-lg space-y-6">
-        <h3 className="text-lg font-semibold text-gray-700">Salary Information</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Monthly Gross Salary (Lei)
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="monthlyGrossSalary"
-              value={inputs.monthlyGrossSalary}
-              onChange={onChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Overtime Hours (Monthly Average)
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="overtimeHours"
-              value={inputs.overtimeHours}
-              onChange={onChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-xl shadow-lg space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-700">Working Conditions</h3>
-          <button
-            type="button"
-            onClick={onAddWorkingPeriod}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 focus:outline-none"
-          >
-            <Plus className="w-4 h-4" />
-            Add Period
-          </button>
         </div>
         
-        {inputs.workingPeriods.map((period, index) => (
-          <div key={index} className="space-y-4 border-b border-gray-200 pb-6 last:border-0">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium text-gray-700">Working Period {index + 1}</h4>
-              {index > 0 && (
+        <div className="p-6 space-y-6">
+          {/* Birth Date */}
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 mb-1.5">
+              Birth Date
+              <Tooltip content="Your date of birth is used to calculate retirement eligibility and pension points" />
+            </label>
+            <input
+              type="date"
+              value={inputs.birthDate}
+              onChange={(e) => onChange('birthDate', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+
+          {/* Retirement Year */}
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 mb-1.5">
+              Planned Retirement Year
+              <Tooltip content={`Standard retirement age is ${RETIREMENT_AGE} years. The suggested retirement year based on your birth date is ${suggestedRetirementYear || 'not available'}`} />
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={inputs.retirementYear}
+                onChange={(e) => onChange('retirementYear', Number(e.target.value))}
+                min={new Date().getFullYear()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {suggestedRetirementYear && inputs.retirementYear !== suggestedRetirementYear && (
                 <button
-                  type="button"
-                  onClick={() => onRemoveWorkingPeriod(index)}
-                  className="text-red-500 hover:text-red-600 focus:outline-none"
+                  onClick={() => onChange('retirementYear', suggestedRetirementYear)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  Use {suggestedRetirementYear}
                 </button>
               )}
             </div>
-            
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                Working Conditions Type
-                <HelpCircle className="w-4 h-4 text-gray-400" />
-              </label>
-              <select
-                name={`workingPeriods[${index}].condition`}
-                value={period.condition}
-                onChange={onChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-              >
-                <option value="none">Normal Working Conditions</option>
-                <option value="groupI">Group I Work (50% bonus)</option>
-                <option value="groupII">Group II Work (25% bonus)</option>
-                <option value="special">Special Conditions (50% bonus)</option>
-                <option value="other">Other Conditions (50% bonus)</option>
-              </select>
-            </div>
-
-            {period.condition !== 'none' && (
-              <>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                    From Age
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                  </label>
-                  <input
-                    type="number"
-                    name={`workingPeriods[${index}].fromAge`}
-                    value={period.fromAge}
-                    onChange={onChange}
-                    min="14"
-                    max="70"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                    To Age
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                  </label>
-                  <input
-                    type="number"
-                    name={`workingPeriods[${index}].toAge`}
-                    value={period.toAge}
-                    onChange={onChange}
-                    min={period.fromAge}
-                    max="70"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                  />
-                </div>
-              </>
-            )}
           </div>
-        ))}
+        </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-lg space-y-6">
-        <h3 className="text-lg font-semibold text-gray-700">Non-contributive Periods</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Military Service (Years)
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="militaryYears"
-              value={inputs.militaryYears || 0}
-              onChange={onChange}
-              min="0"
-              max="5"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
+      {/* Contribution Periods Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-500" />
+              <h2 className="font-medium text-gray-900">Contribution Periods</h2>
+            </div>
+            <button
+              onClick={handleAddPeriod}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Period
+            </button>
           </div>
+        </div>
 
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              University Studies (Years)
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="universityYears"
-              value={inputs.universityYears || 0}
-              onChange={onChange}
-              min="0"
-              max="6"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
-          </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            {(inputs.contributionPeriods || []).map((period, index) => (
+              <ContributionPeriod
+                key={index}
+                period={period}
+                onUpdate={(updatedPeriod) => handleUpdatePeriod(index, updatedPeriod)}
+                onRemove={() => handleRemovePeriod(index)}
+              />
+            ))}
 
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Child Care Leave (Years)
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="childCareYears"
-              value={inputs.childCareYears || 0}
-              onChange={onChange}
-              min="0"
-              max="10"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              Medical Leave (Years)
-              <HelpCircle className="w-4 h-4 text-gray-400" />
-            </label>
-            <input
-              type="number"
-              name="medicalYears"
-              value={inputs.medicalYears || 0}
-              onChange={onChange}
-              min="0"
-              max="5"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-            />
+            {(!inputs.contributionPeriods || inputs.contributionPeriods.length === 0) && (
+              <div className="text-center py-12 px-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 mb-4">
+                  <Info className="w-6 h-6 text-blue-500" />
+                </div>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">No Contribution Periods</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add your employment and non-contributive periods to calculate your pension.
+                </p>
+                <button
+                  onClick={handleAddPeriod}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Your First Period
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
