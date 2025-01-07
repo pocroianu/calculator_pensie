@@ -124,6 +124,8 @@ const InputForm: React.FC<InputFormProps> = ({
           <div className="space-y-4">
             {(inputs.contributionPeriods || []).map((period, index) => (
               <ContributionPeriod
+                key={index}
+                index={index}
                 period={period}
                 onUpdate={(updatedPeriod: ContributionPeriodType) => handleUpdatePeriod(index, updatedPeriod)}
                 onRemove={() => handleRemovePeriod(index)}

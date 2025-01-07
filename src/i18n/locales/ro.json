@@ -1,0 +1,106 @@
+{
+  "common": {
+    "add": "Adaugă",
+    "remove": "Șterge",
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "years": "ani",
+    "remaining": "rămași",
+    "points": "puncte",
+    "none": "Niciunul"
+  },
+  "pension": {
+    "title": "Calculator Pensie România",
+    "description": "Calculează-ți pensia conform sistemului de pensii din România 2024",
+    "personalInfo": {
+      "title": "Informații Personale",
+      "birthDate": "Data Nașterii",
+      "plannedRetirementYear": "Anul Planificat pentru Pensionare",
+      "use2061": "Folosește 2061"
+    },
+    "contributionPeriods": {
+      "title": "Perioade de Contribuție",
+      "addPeriod": "Adaugă Perioadă",
+      "removePeriod": "Șterge Perioadă",
+      "monthlyGrossSalary": "Salariu Brut Lunar",
+      "startDate": "Data Început",
+      "endDate": "Data Sfârșit",
+      "company": "Companie",
+      "employmentPeriod": "Perioadă de Angajare",
+      "validation": {
+        "monthlyGrossSalaryRequired": "Salariul brut lunar este obligatoriu"
+      },
+      "workingCondition": {
+        "label": "Condiții de Muncă",
+        "normal": "Normale",
+        "hard": "Grele",
+        "veryHard": "Foarte Grele"
+      },
+      "nonContributivePeriod": {
+        "label": "Perioadă Necontributivă",
+        "military": "Stagiu Militar",
+        "university": "Universitate",
+        "childCare": "Îngrijire Copil",
+        "medical": "Concediu Medical"
+      }
+    },
+    "contributionAnalysis": {
+      "title": "Analiza Contribuției",
+      "totalPoints": "Total Puncte",
+      "monthlyPension": "Pensie Lunară",
+      "yearlyPension": "Pensie Anuală",
+      "retirementAge": "Vârsta de Pensionare",
+      "contributionYears": "Ani de Contribuție",
+      "minimumRequired": "Minim Necesar",
+      "completeContribution": "Contribuție Completă",
+      "stabilityPoints": "Puncte de Stabilitate",
+      "nonContributivePoints": "Puncte Necontributive"
+    },
+    "stats": {
+      "validation": {
+        "noContributionPeriods": "Adaugă perioadele tale de contribuție pentru a-ți calcula pensia",
+        "minimumContributionYears": "Mai ai nevoie de {{years}} ani pentru a atinge perioada minimă de contribuție de {{minimum}} ani",
+        "completeContributionYears": "Mai ai nevoie de {{years}} ani pentru a atinge perioada completă de contribuție de {{complete}} ani",
+        "allConditionsMet": "Toate condițiile de pensionare sunt îndeplinite"
+      },
+      "retirementStatus": {
+        "title": "Status Pensionare",
+        "eligible": "Eligibil pentru pensionare",
+        "yearsRemaining": "{{years}} ani rămași"
+      },
+      "timeline": {
+        "title": "Cronologie",
+        "currentAge": "Vârsta Actuală",
+        "retirementAge": "Vârsta de Pensionare",
+        "years": "ani"
+      },
+      "contributionProgress": {
+        "title": "Progres Contribuție",
+        "years": "ANI"
+      },
+      "pointsBreakdown": {
+        "title": "Detaliere Puncte",
+        "contribution": "Contribuție",
+        "stability": "Stabilitate",
+        "nonContributive": "Necontributiv",
+        "totalPoints": "Total Puncte"
+      },
+      "periodBreakdown": {
+        "title": "Detaliere Perioade",
+        "noPeriodsYet": "Nu există încă perioade de contribuție",
+        "monthlyGrossSalary": "Salariu Lunar Brut",
+        "workingCondition": "Condiție de Muncă",
+        "nonContributiveType": "Tip Perioadă Necontributivă",
+        "percentageOfTotal": "% din punctajul total"
+      },
+      "pensionEstimate": {
+        "title": "Estimare Pensie",
+        "monthlyPension": "Pensie Lunară",
+        "yearlyPension": "Pensie Anuală",
+        "basedOn": "Bazat pe {{points}} puncte totale",
+        "formula": "Conform formulei de calcul a pensiei din 2024",
+        "completeMinimum": "Completează perioada minimă de contribuție pentru a vedea pensia estimată"
+      }
+    }
+  }
+}

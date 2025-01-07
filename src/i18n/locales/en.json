@@ -1,0 +1,106 @@
+{
+  "common": {
+    "add": "Add",
+    "remove": "Remove",
+    "save": "Save",
+    "cancel": "Cancel",
+    "years": "years",
+    "remaining": "remaining",
+    "points": "points",
+    "none": "None"
+  },
+  "pension": {
+    "title": "Romanian Pension Calculator",
+    "description": "Calculate your pension according to the 2024 Romanian pension system",
+    "personalInfo": {
+      "title": "Personal Information",
+      "birthDate": "Birth Date",
+      "plannedRetirementYear": "Planned Retirement Year",
+      "use2061": "Use 2061"
+    },
+    "contributionPeriods": {
+      "title": "Contribution Periods",
+      "addPeriod": "Add Period",
+      "removePeriod": "Remove Period",
+      "monthlyGrossSalary": "Monthly Gross Salary",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "company": "Company",
+      "employmentPeriod": "Employment Period",
+      "validation": {
+        "monthlyGrossSalaryRequired": "Monthly gross salary is required"
+      },
+      "workingCondition": {
+        "label": "Working Conditions",
+        "normal": "Normal",
+        "hard": "Hard",
+        "veryHard": "Very Hard"
+      },
+      "nonContributivePeriod": {
+        "label": "Non-contributive Period",
+        "military": "Military Service",
+        "university": "University",
+        "childCare": "Child Care",
+        "medical": "Medical Leave"
+      }
+    },
+    "contributionAnalysis": {
+      "title": "Contribution Analysis",
+      "totalPoints": "Total Points",
+      "monthlyPension": "Monthly Pension",
+      "yearlyPension": "Yearly Pension",
+      "retirementAge": "Retirement Age",
+      "contributionYears": "Contribution Years",
+      "minimumRequired": "Minimum Required",
+      "completeContribution": "Complete Contribution",
+      "stabilityPoints": "Stability Points",
+      "nonContributivePoints": "Non-contributive Points"
+    },
+    "stats": {
+      "validation": {
+        "noContributionPeriods": "Add your contribution periods to calculate your pension",
+        "minimumContributionYears": "You need {{years}} more years to reach the minimum contribution period of {{minimum}} years",
+        "completeContributionYears": "You need {{years}} more years to reach the complete contribution period of {{complete}} years",
+        "allConditionsMet": "All pension conditions are met"
+      },
+      "retirementStatus": {
+        "title": "Retirement Status",
+        "eligible": "Eligible for retirement",
+        "yearsRemaining": "{{years}} years remaining"
+      },
+      "timeline": {
+        "title": "Timeline",
+        "currentAge": "Current Age",
+        "retirementAge": "Retirement Age",
+        "years": "years"
+      },
+      "contributionProgress": {
+        "title": "Contribution Progress",
+        "years": "YEARS"
+      },
+      "pointsBreakdown": {
+        "title": "Points Breakdown",
+        "contribution": "Contribution",
+        "stability": "Stability",
+        "nonContributive": "Non-contributive",
+        "totalPoints": "Total Points"
+      },
+      "periodBreakdown": {
+        "title": "Period Breakdown",
+        "noPeriodsYet": "No contribution periods added yet",
+        "monthlyGrossSalary": "Monthly Gross Salary",
+        "workingCondition": "Working Condition",
+        "nonContributiveType": "Non-contributive Type",
+        "percentageOfTotal": "of total points"
+      },
+      "pensionEstimate": {
+        "title": "Pension Estimate",
+        "monthlyPension": "Monthly Pension",
+        "yearlyPension": "Yearly Pension",
+        "basedOn": "Based on {{points}} total points",
+        "formula": "Based on the 2024 Romanian pension calculation formula",
+        "completeMinimum": "Complete the minimum contribution period to see your estimated pension"
+      }
+    }
+  }
+}

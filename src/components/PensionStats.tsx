@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle, Clock, TrendingUp, Briefcase } from 'lucide-r
 import { PensionDetails, ContributionPeriod, PensionInputs } from '../types/pensionTypes';
 import { RETIREMENT_AGE, MINIMUM_CONTRIBUTION_YEARS, COMPLETE_CONTRIBUTION_YEARS } from '../utils/pensionCalculations';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   pensionDetails: PensionDetails;
@@ -13,6 +14,8 @@ const PensionStats: React.FC<Props> = ({
   pensionDetails,
   inputs 
 }) => {
+  const { t } = useTranslation();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ro-RO', {
       style: 'currency',
@@ -62,7 +65,7 @@ const PensionStats: React.FC<Props> = ({
       return {
         type: 'warning',
         icon: <AlertCircle className="w-5 h-5 text-yellow-500" />,
-        message: 'Add your contribution periods to calculate your pension',
+        message: t('pension.stats.validation.noContributionPeriods'),
         color: 'bg-yellow-50 border-yellow-200'
       };
     }
@@ -78,7 +81,7 @@ const PensionStats: React.FC<Props> = ({
       return {
         type: 'warning',
         icon: <AlertCircle className="w-5 h-5 text-yellow-500" />,
-        message: `You need ${Math.ceil(MINIMUM_CONTRIBUTION_YEARS - totalContributiveYears)} more years to reach the minimum contribution period of ${MINIMUM_CONTRIBUTION_YEARS} years`,
+        message: t('pension.stats.validation.minimumContributionYears', { years: Math.ceil(MINIMUM_CONTRIBUTION_YEARS - totalContributiveYears), minimum: MINIMUM_CONTRIBUTION_YEARS }),
         color: 'bg-yellow-50 border-yellow-200'
       };
     }
@@ -87,7 +90,7 @@ const PensionStats: React.FC<Props> = ({
       return {
         type: 'warning',
         icon: <AlertCircle className="w-5 h-5 text-yellow-500" />,
-        message: `You need ${Math.ceil(COMPLETE_CONTRIBUTION_YEARS - totalContributiveYears)} more years to reach the complete contribution period of ${COMPLETE_CONTRIBUTION_YEARS} years`,
+        message: t('pension.stats.validation.completeContributionYears', { years: Math.ceil(COMPLETE_CONTRIBUTION_YEARS - totalContributiveYears), complete: COMPLETE_CONTRIBUTION_YEARS }),
         color: 'bg-yellow-50 border-yellow-200'
       };
     }
@@ -95,7 +98,7 @@ const PensionStats: React.FC<Props> = ({
     return {
       type: 'success',
       icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-      message: 'All pension conditions are met',
+      message: t('pension.stats.validation.allConditionsMet'),
       color: 'bg-green-50 border-green-200'
     };
   };
@@ -117,11 +120,11 @@ const PensionStats: React.FC<Props> = ({
         <div className="flex items-start gap-3">
           <Clock className="w-5 h-5 text-blue-500" />
           <div>
-            <h3 className="font-medium">Retirement Status</h3>
+            <h3 className="font-medium">{t('pension.stats.retirementStatus.title')}</h3>
             <p className="text-sm">
               {pensionDetails.yearsUntilRetirement <= 0
-                ? `Eligible for retirement`
-                : `${pensionDetails.yearsUntilRetirement} years remaining`
+                ? t('pension.stats.retirementStatus.eligible')
+                : t('pension.stats.retirementStatus.yearsRemaining', { years: pensionDetails.yearsUntilRetirement })
               }
             </p>
           </div>
@@ -136,26 +139,26 @@ const PensionStats: React.FC<Props> = ({
             <div className="p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-500" />
-                <h3 className="font-medium text-gray-900">Timeline</h3>
+                <h3 className="font-medium text-gray-900">{t('pension.stats.timeline.title')}</h3>
               </div>
             </div>
 
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">Current Age</div>
-                  <div className="text-lg font-medium">{pensionDetails.currentAge} years</div>
+                  <div className="text-sm text-gray-600 mb-1">{t('pension.stats.timeline.currentAge')}</div>
+                  <div className="text-lg font-medium">{pensionDetails.currentAge} {t('pension.stats.timeline.years')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">Retirement Age</div>
-                  <div className="text-lg font-medium">{RETIREMENT_AGE} years</div>
+                  <div className="text-sm text-gray-600 mb-1">{t('pension.stats.timeline.retirementAge')}</div>
+                  <div className="text-lg font-medium">{RETIREMENT_AGE} {t('pension.stats.timeline.years')}</div>
                 </div>
               </div>
 
               <div className="mt-6">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Contribution Progress</span>
-                  <span>{Math.round(pensionDetails.totalContributiveYears || 0)} / {COMPLETE_CONTRIBUTION_YEARS} YEARS</span>
+                  <span>{t('pension.stats.contributionProgress.title')}</span>
+                  <span>{Math.round(pensionDetails.totalContributiveYears || 0)} / {COMPLETE_CONTRIBUTION_YEARS} {t('pension.stats.contributionProgress.years')}</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2.5">
                   <div
@@ -174,27 +177,27 @@ const PensionStats: React.FC<Props> = ({
             <div className="p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-gray-500" />
-                <h3 className="font-medium text-gray-900">Points Breakdown</h3>
+                <h3 className="font-medium text-gray-900">{t('pension.stats.pointsBreakdown.title')}</h3>
               </div>
             </div>
 
             <div className="p-6">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Contribution</span>
+                  <span className="text-sm text-gray-600">{t('pension.stats.pointsBreakdown.contribution')}</span>
                   <span className="text-sm font-medium">{pensionDetails.contributionPoints.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Stability</span>
+                  <span className="text-sm text-gray-600">{t('pension.stats.pointsBreakdown.stability')}</span>
                   <span className="text-sm font-medium">{pensionDetails.stabilityPoints.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Non-contributive</span>
+                  <span className="text-sm text-gray-600">{t('pension.stats.pointsBreakdown.nonContributive')}</span>
                   <span className="text-sm font-medium">{pensionDetails.nonContributivePoints?.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-4">
-                <span className="text-sm font-medium text-gray-900">Total Points</span>
+                <span className="text-sm font-medium text-gray-900">{t('pension.stats.pointsBreakdown.totalPoints')}</span>
                 <span className="text-sm font-bold text-blue-600">{pensionDetails.totalPoints.toFixed(2)}</span>
               </div>
             </div>
@@ -205,14 +208,20 @@ const PensionStats: React.FC<Props> = ({
             <div className="p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-500" />
-                <h2 className="font-medium text-gray-900">Period Breakdown</h2>
+                <h2 className="font-medium text-gray-900">{t('pension.stats.periodBreakdown.title')}</h2>
               </div>
             </div>
 
             <div className="divide-y divide-gray-200">
               {inputs.contributionPeriods?.map((period, index) => {
+                if (!period.fromDate || !period.toDate) return null;
+                
                 const startDate = new Date(period.fromDate);
                 const endDate = new Date(period.toDate);
+                
+                // Validate dates
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
+                
                 const years = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
                 const points = calculatePeriodPoints(period);
                 const pointPercentage = pensionDetails.totalPoints > 0 ? (points / pensionDetails.totalPoints) * 100 : 0;
@@ -229,7 +238,7 @@ const PensionStats: React.FC<Props> = ({
                             <Clock className="w-4 h-4 text-orange-500" />
                           )}
                           <h3 className="font-medium text-gray-900">
-                            {isContributive ? period.company : period.nonContributiveType}
+                            {isContributive ? period.company : t(`pension.contributionPeriods.nonContributivePeriod.${period.nonContributiveType}`)}
                           </h3>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
@@ -238,10 +247,10 @@ const PensionStats: React.FC<Props> = ({
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-medium text-gray-900">
-                          {points.toFixed(2)} points
+                          {points.toFixed(2)} {t('common.points')}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {years.toFixed(1)} years
+                          {years.toFixed(1)} {t('common.years')}
                         </div>
                       </div>
                     </div>
@@ -249,20 +258,20 @@ const PensionStats: React.FC<Props> = ({
                     {isContributive && (
                       <div className="mt-2 grid grid-cols-2 gap-4 text-sm text-gray-500">
                         <div>
-                          <span className="font-medium">Monthly Salary:</span>{' '}
-                          {new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'RON' }).format(period.monthlyGrossSalary || 0)}
+                          <span className="font-medium">{t('pension.stats.periodBreakdown.monthlyGrossSalary')}:</span>{' '}
+                          {formatCurrency(period.monthlyGrossSalary || 0)}
                         </div>
                         <div>
-                          <span className="font-medium">Working Condition:</span>{' '}
-                          {period.workingCondition}
+                          <span className="font-medium">{t('pension.stats.periodBreakdown.workingCondition')}:</span>{' '}
+                          {t(`pension.contributionPeriods.workingCondition.${period.workingCondition}`)}
                         </div>
                       </div>
                     )}
 
                     {!isContributive && (
                       <div className="mt-2 text-sm text-gray-500">
-                        <span className="font-medium">Non-contributive Type:</span>{' '}
-                        {period.nonContributiveType}
+                        <span className="font-medium">{t('pension.stats.periodBreakdown.nonContributiveType')}:</span>{' '}
+                        {t(`pension.contributionPeriods.nonContributivePeriod.${period.nonContributiveType}`)}
                       </div>
                     )}
 
@@ -278,7 +287,7 @@ const PensionStats: React.FC<Props> = ({
                         />
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {pointPercentage.toFixed(1)}% of total points
+                        {pointPercentage.toFixed(1)}% {t('pension.stats.periodBreakdown.percentageOfTotal')}
                       </div>
                     </div>
                   </div>
@@ -287,7 +296,7 @@ const PensionStats: React.FC<Props> = ({
 
               {(!inputs.contributionPeriods || inputs.contributionPeriods.length === 0) && (
                 <div className="p-6 text-center text-gray-500">
-                  No contribution periods added yet
+                  {t('pension.stats.periodBreakdown.noPeriodsYet')}
                 </div>
               )}
             </div>
@@ -300,7 +309,7 @@ const PensionStats: React.FC<Props> = ({
             <div className="p-4 border-b border-blue-400/30 bg-white/10">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-white" />
-                <h2 className="font-medium text-white">Pension Estimate</h2>
+                <h2 className="font-medium text-white">{t('pension.stats.pensionEstimate.title')}</h2>
               </div>
             </div>
 
@@ -308,16 +317,16 @@ const PensionStats: React.FC<Props> = ({
               {pensionDetails.monthlyPension > 0 ? (
                 <>
                   <div className="text-center">
-                    <div className="text-sm text-blue-100 mb-2">Monthly Pension</div>
+                    <div className="text-sm text-blue-100 mb-2">{t('pension.stats.pensionEstimate.monthlyPension')}</div>
                     <div className="text-3xl lg:text-4xl font-bold text-white mb-1 whitespace-nowrap">
                       {formatCurrency(pensionDetails.monthlyPension)}
                     </div>
                     <div className="text-xs text-blue-200">
-                      Based on {pensionDetails.totalPoints.toFixed(2)} total points
+                      {t('pension.stats.pensionEstimate.basedOn', { points: pensionDetails.totalPoints.toFixed(2) })}
                     </div>
                   </div>
                   <div className="text-center mt-6 pt-4 border-t border-blue-400/30">
-                    <div className="text-sm text-blue-100 mb-2">Yearly Pension</div>
+                    <div className="text-sm text-blue-100 mb-2">{t('pension.stats.pensionEstimate.yearlyPension')}</div>
                     <div className="text-xl lg:text-2xl font-semibold text-white whitespace-nowrap">
                       {formatCurrency(pensionDetails.monthlyPension * 12)}
                     </div>
@@ -329,12 +338,12 @@ const PensionStats: React.FC<Props> = ({
                     <Clock className="w-6 h-6 text-white" />
                   </div>
                   <p className="text-sm text-white/90 max-w-[240px] mx-auto">
-                    {pensionDetails.error || 'Complete the minimum contribution period to see your estimated pension'}
+                    {pensionDetails.error || t('pension.stats.pensionEstimate.completeMinimum')}
                   </p>
                 </div>
               )}
               <div className="text-xs text-center text-blue-100/80 pt-4 border-t border-blue-400/30 mt-4">
-                Based on the 2024 Romanian pension calculation formula
+                {t('pension.stats.pensionEstimate.formula')}
               </div>
             </div>
           </div>

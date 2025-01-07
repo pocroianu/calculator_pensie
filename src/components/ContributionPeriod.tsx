@@ -1,171 +1,164 @@
+import React from 'react';
 import { X } from 'lucide-react';
 import { ContributionPeriod as ContributionPeriodType, WorkingCondition, NonContributivePeriodType } from '../types/pensionTypes';
-import Tooltip from './Tooltip';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   period: ContributionPeriodType;
-  onUpdate: (period: ContributionPeriodType) => void;
+  index: number;
+  onUpdate: (updatedPeriod: ContributionPeriodType) => void;
   onRemove: () => void;
 }
 
-const ContributionPeriod: React.FC<Props> = ({ period, onUpdate, onRemove}) => {
-  const handleChange = (
-    field: keyof ContributionPeriodType,
-    value: typeof field extends 'nonContributiveType' ? NonContributivePeriodType : string | number
-  ) => {
+const ContributionPeriod: React.FC<Props> = ({
+  period,
+  index,
+  onUpdate,
+  onRemove,
+}) => {
+  const { t } = useTranslation();
+
+  const handleChange = (field: keyof ContributionPeriodType, value: any) => {
     if (field === 'nonContributiveType') {
       // Reset salary and working condition when switching to non-contributive
       if (value) {
         onUpdate({
           ...period,
-          [field as NonContributivePeriodType]: value,
+          [field]: value,
           monthlyGrossSalary: 0,
           workingCondition: 'normal'
         });
       } else {
         onUpdate({
           ...period,
-          [field as NonContributivePeriodType]: value
+          [field]: value
         });
       }
     } else {
-      onUpdate({
-        ...period,
-        [field]: value,
-      });
+      onUpdate({ ...period, [field]: value });
     }
   };
 
   const cardStyle = useMemo(() => {
-    if (!period.nonContributiveType) {
-      return 'bg-white';
+    if (period.nonContributiveType) {
+      return 'bg-orange-50 border-orange-200';
     }
-    switch (period.nonContributiveType) {
-      case 'military':
-        return 'bg-blue-50';
-      case 'university':
-        return 'bg-purple-50';
-      case 'childCare':
-        return 'bg-pink-50';
-      case 'medical':
-        return 'bg-green-50';
-      default:
-        return 'bg-white';
-    }
+    return 'bg-white border-gray-200';
   }, [period.nonContributiveType]);
 
   return (
     <div className={`${cardStyle} rounded-xl shadow-lg p-4 space-y-4 transition-colors duration-200`}>
       <div className="flex justify-between items-start">
         <h4 className="text-sm font-medium text-gray-700">
-          {period.nonContributiveType ? 'Non-contributive Period' : 'Employment Period'}
+          {period.nonContributiveType ? t('pension.contributionPeriods.nonContributivePeriod.label') : t('pension.contributionPeriods.employmentPeriod')} {index + 1}
         </h4>
         <button
           onClick={onRemove}
-          className="text-gray-400 hover:text-gray-600"
-          aria-label="Remove period"
+          aria-label={t('pension.contributionPeriods.removePeriod')}
+          className="text-red-600 hover:text-red-800"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="flex items-center gap-2 text-sm text-gray-600 mb-1.5">
-            From Date
-            <Tooltip content="Start date of this period" />
-          </label>
-          <input
-            type="date"
-            value={period.fromDate}
-            onChange={(e) => handleChange('fromDate', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="flex items-center gap-2 text-sm text-gray-600 mb-1.5">
-            To Date
-            <Tooltip content="End date of this period" />
-          </label>
-          <input
-            type="date"
-            value={period.toDate}
-            onChange={(e) => handleChange('toDate', e.target.value)}
-            min={period.fromDate}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-      </div>
-
+      {/* Non-contributive Period Type */}
       <div>
-        <label className="flex items-center gap-2 text-sm text-gray-600 mb-1.5">
-          Type
-          <Tooltip content="Select whether this is a regular employment or non-contributive period" />
+        <label className="block text-sm font-medium text-gray-700">
+          {t('pension.contributionPeriods.nonContributivePeriod.label')}
         </label>
         <select
           value={period.nonContributiveType || ''}
           onChange={(e) => handleChange('nonContributiveType', e.target.value as NonContributivePeriodType)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="">Regular Employment</option>
-          <option value="military">Military Service</option>
-          <option value="university">University Studies</option>
-          <option value="childCare">Child Care</option>
-          <option value="medical">Medical Leave</option>
+          <option value="">{t('common.none')}</option>
+          <option value="military">{t('pension.contributionPeriods.nonContributivePeriod.military')}</option>
+          <option value="university">{t('pension.contributionPeriods.nonContributivePeriod.university')}</option>
+          <option value="childCare">{t('pension.contributionPeriods.nonContributivePeriod.childCare')}</option>
+          <option value="medical">{t('pension.contributionPeriods.nonContributivePeriod.medical')}</option>
         </select>
       </div>
 
       {!period.nonContributiveType && (
         <>
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-600 mb-1.5">
-              Company
-              <Tooltip content="Name of the employer" />
+            <label className="block text-sm font-medium text-gray-700">
+              {t('pension.contributionPeriods.company')}
             </label>
             <input
               type="text"
-              value={period.company}
+              value={period.company || ''}
               onChange={(e) => handleChange('company', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Company name"
             />
           </div>
 
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-600 mb-1.5">
-              Monthly Gross Salary (Lei)
-              <Tooltip content="Your monthly gross salary during this period" />
+            <label className="block text-sm font-medium text-gray-700">
+              {t('pension.contributionPeriods.monthlyGrossSalary')}
+              <span className="text-red-500 ml-1">*</span>
             </label>
             <input
               type="number"
-              value={period.monthlyGrossSalary}
+              value={period.monthlyGrossSalary || ''}
               onChange={(e) => handleChange('monthlyGrossSalary', Number(e.target.value))}
               min={0}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="5000"
+              required
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                !period.nonContributiveType && (!period.monthlyGrossSalary || period.monthlyGrossSalary <= 0)
+                  ? 'border-red-300 bg-red-50'
+                  : 'border-gray-300'
+              }`}
             />
+            {!period.nonContributiveType && (!period.monthlyGrossSalary || period.monthlyGrossSalary <= 0) && (
+              <p className="mt-1 text-sm text-red-600">
+                {t('pension.contributionPeriods.validation.monthlyGrossSalaryRequired')}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-600 mb-1.5">
-              Working Condition
-              <Tooltip content="Type of working conditions during this period" />
+            <label className="block text-sm font-medium text-gray-700">
+              {t('pension.contributionPeriods.workingCondition.label')}
             </label>
             <select
-              value={period.workingCondition}
+              value={period.workingCondition || 'normal'}
               onChange={(e) => handleChange('workingCondition', e.target.value as WorkingCondition)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="normal">Normal</option>
-              <option value="special">Special</option>
-              <option value="difficult">Difficult</option>
-              <option value="veryDifficult">Very Difficult</option>
+              <option value="normal">{t('pension.contributionPeriods.workingCondition.normal')}</option>
+              <option value="hard">{t('pension.contributionPeriods.workingCondition.hard')}</option>
+              <option value="veryHard">{t('pension.contributionPeriods.workingCondition.veryHard')}</option>
             </select>
           </div>
         </>
       )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            {t('pension.contributionPeriods.startDate')}
+          </label>
+          <input
+            type="date"
+            value={period.fromDate || ''}
+            onChange={(e) => handleChange('fromDate', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            {t('pension.contributionPeriods.endDate')}
+          </label>
+          <input
+            type="date"
+            value={period.toDate || ''}
+            onChange={(e) => handleChange('toDate', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      </div>
     </div>
   );
 };
