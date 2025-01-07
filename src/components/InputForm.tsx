@@ -1,7 +1,7 @@
 import React from 'react';
 import { CalendarDays, Plus, Clock, Info } from 'lucide-react';
 import { PensionInputs, ContributionPeriod as ContributionPeriodType } from '../types/pensionTypes';
-import { ContributionPeriod } from './ContributionPeriod';
+import ContributionPeriod from './ContributionPeriod';
 import Tooltip from './Tooltip';
 import { RETIREMENT_AGE } from '../utils/pensionCalculations';
 
@@ -60,12 +60,14 @@ const InputForm: React.FC<InputFormProps> = ({
         <div className="p-6 space-y-6">
           {/* Birth Date */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 mb-1.5">
+            <label htmlFor="birthDate" className="flex items-center gap-2 text-sm text-gray-700 mb-1.5">
               Birth Date
               <Tooltip content="Your date of birth is used to calculate retirement eligibility and pension points" />
             </label>
             <input
+              id="birthDate"
               type="date"
+              title="birthday"
               value={inputs.birthDate}
               onChange={(e) => onChange('birthDate', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -122,9 +124,8 @@ const InputForm: React.FC<InputFormProps> = ({
           <div className="space-y-4">
             {(inputs.contributionPeriods || []).map((period, index) => (
               <ContributionPeriod
-                key={index}
                 period={period}
-                onUpdate={(updatedPeriod) => handleUpdatePeriod(index, updatedPeriod)}
+                onUpdate={(updatedPeriod: ContributionPeriodType) => handleUpdatePeriod(index, updatedPeriod)}
                 onRemove={() => handleRemovePeriod(index)}
               />
             ))}
