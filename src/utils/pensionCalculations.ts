@@ -38,28 +38,74 @@ const AVERAGE_GROSS_SALARY_2024 = 6789; // Lei
  * din luna respectivă. Apoi ele se însumează și se împart la 12 pentru a determina punctajul anual.
  */
 
+export const calculateMonthlyPension = (
+  contributionPeriods: ContributionPeriod[],
+  birthDate: string,
+): {
+  monthlyPension: number;
+  details: PensionDetails;
+} => {
+  let totalPoints = 0;
+  let contributionPoints = 0;
+  let stabilityPoints = 0;
+  let nonContributivePoints = 0;
 
-export type WorkingCondition = 'none' | 'groupI' | 'groupII' | 'special' | 'other';
+  // Calculate contribution points and non-contributive points
+  contributionPeriods.forEach((period: ContributionPeriod) => {
+    if (period.nonContributiveType) {
+      // Handle non-contributive periods
+      let numberOfYears = period.fromDate && period.toDate ? 
+        (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+      
+      switch (period.nonContributiveType) {
+        case 'military':
+        case 'university':
+          nonContributivePoints += numberOfYears * 0.25; // 0.25 points per year
+          break;
+        case 'medical':
+          nonContributivePoints += numberOfYears * 0.20; // 0.20 points per year
+          break;
+        case 'childCare':
+          nonContributivePoints += numberOfYears * 0.25; // 0.30 points per year
+          break;
+      }
+    } else {
+      // Handle regular contribution periods
+      let point = calculateContributionPoint(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
+      let numberOfYears = period.fromDate && period.toDate ? 
+        (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+      contributionPoints += point * numberOfYears;
+    }
+  });
 
-export interface WorkingPeriod {
-  condition: WorkingCondition;
-  fromAge: number;
-  toAge: number;
-}
+  // Calculate stability points
+  stabilityPoints = calculateStabilityPoints(
+    contributionPeriods.filter(p => !p.nonContributiveType), // Only consider contributive periods
+    birthDate
+  );
 
-export interface NonContributivePeriod {
-  type: 'military' | 'university' | 'medical' | 'unemployment' | 'disability' | 'childCare';
-  years: number;
-}
+  totalPoints = 
+    contributionPoints + 
+    stabilityPoints +
+    nonContributivePoints;
 
-export interface WorkingConditionsResult {
-  bonus: number;
-  periods: {
-    condition: WorkingCondition;
-    years: number;
-    points: number;
-  }[];
-}
+  return {
+    monthlyPension: Math.round(totalPoints * 81),
+    details: {
+      contributionPoints,
+      stabilityPoints,
+      totalPoints,
+      nonContributivePoints
+    }
+  };
+};
+
+export const calculateContributionPoint = (
+  monthlyGrossSalary: number,
+  averageGrossSalary: number
+): number => {
+  return monthlyGrossSalary / averageGrossSalary;
+};
 
 export const calculateStabilityPoints = (
   contributionPeriods: ContributionPeriod[],
@@ -115,157 +161,4 @@ export const calculateStabilityPoints = (
   });
 
   return totalPoints;
-};
-
-export const calculateWorkingConditionsBonus = (
-  workingPeriods: WorkingPeriod[]
-): WorkingConditionsResult => {
-  if (!workingPeriods || workingPeriods.length === 0) {
-    return { bonus: 0, periods: [] };
-  }
-
-  const periods = workingPeriods.map(period => {
-    const yearsInCondition = period.toAge - period.fromAge;
-    const monthsInCondition = yearsInCondition * 12;
-
-    let points = 0;
-    switch (period.condition) {
-      case 'groupI':
-        points = monthsInCondition * GROUP_I_BONUS;
-        break;
-      case 'groupII':
-        points = monthsInCondition * GROUP_II_BONUS;
-        break;
-      case 'special':
-      case 'other':
-        points = monthsInCondition * SPECIAL_CONDITIONS_BONUS;
-        break;
-      default:
-        points = 0;
-    }
-
-    return {
-      condition: period.condition,
-      years: yearsInCondition,
-      points
-    };
-  });
-
-  const totalBonus = periods.reduce((sum, period) => sum + period.points, 0);
-
-  return {
-    bonus: totalBonus,
-    periods: periods.filter(p => p.points > 0)
-  };
-};
-
-export interface NonContributiveResult {
-  total: number;
-  periods: {
-    type: NonContributivePeriod['type'];
-    years: number;
-    points: number;
-  }[];
-}
-
-export const calculateNonContributivePoints = (
-  periods: NonContributivePeriod[]
-): NonContributiveResult => {
-  if (!periods || periods.length === 0) {
-    return { total: 0, periods: [] };
-  }
-
-  const calculatedPeriods = periods.map(period => {
-    let points = 0;
-    switch (period.type) {
-      case 'military':
-      case 'university':
-        points = period.years * 0.25; // 0.25 points per year
-        break;
-      case 'medical':
-      case 'unemployment':
-      case 'disability':
-        points = period.years * 0.15; // 0.15 points per year
-        break;
-      case 'childCare':
-        points = period.years * 0.30; // 0.30 points per year
-        break;
-    }
-
-    return {
-      type: period.type,
-      years: period.years,
-      points
-    };
-  });
-
-  return {
-    total: calculatedPeriods.reduce((sum, period) => sum + period.points, 0),
-    periods: calculatedPeriods.filter(p => p.points > 0)
-  };
-};
-
-
-
-/**
- * Exemplu de calcul al pensiei: 
- * Domnul Popescu, pensionar cu un stagiu de cotizare de 35 ani, a activat în condiții normale de muncă. 
- * Pe lângă cei 35 de ani de lucru efectiv, el are și 4 ani de facultate, iar timp de 1 an a fost în șomaj.
- * 
- * Salariul mediu pe durata activității: 4.274 lei brut (2.500 lei net)
- * Puncte de contributivitate: 35 x 0,64 (media anuală) = 22,4
- * Puncte de stabilitate: 0,5 x 5 (ani munciți peste 25) + 0,75 x 5 (ani munciți peste 30) = 6,25
- * Puncte asimilate / necontributive: 5 (facultate și șomaj) x 0,25 = 1,25
- * Număr total puncte: 22,4 + 6,25 + 1,25 = 29,9
- * Sumă pensie: 81 lei (VPR) x 29,9 = 2.422 lei
- * 
- * Din pensia totală, suma ce depășește 2.000 lei se impoziteaza cu 10%. Prin urmare, după aplicarea taxei pentru cei 422 lei ce depășesc pragul, 
- * suma pe care pensionarul o va primi efectiv este de 2.380 lei. Insa, Ministerul Muncii a anunțat că de la 1 octombrie 2024, 
- * pensiile de până la 3.000 lei nu vor mai fi impozitate și doar pentru suma ce depășește plafonul de 3.000 se va aplica impozitul de 10%.
- * 
- */
-export const calculateMonthlyPension = (
-  contributionPeriods: ContributionPeriod[],
-  birthDate: string,
-): {
-  monthlyPension: number;
-  details: PensionDetails;
-} => {
-  let totalPoints = 0;
-  let contributionPoints = 0;
-  let stabilityPoints = 0;
-  let nonContributivePoints = 0;
-
-  // Calculate contribution points
-  contributionPeriods.forEach((period: ContributionPeriod) => {
-    let point = calculateContributionPoint(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
-    let numberOfMonths = period.fromDate && period.toDate ? 
-      (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
-    contributionPoints += point * numberOfMonths;  
-  });
-
-  // Calculate stability points
-  stabilityPoints = calculateStabilityPoints(contributionPeriods, birthDate);
-
-  totalPoints = 
-    contributionPoints + 
-    stabilityPoints +
-    nonContributivePoints;
-
-  return {
-    monthlyPension: Math.round(totalPoints * 81),
-    details: {
-      contributionPoints,
-      stabilityPoints,
-      totalPoints,
-      nonContributivePoints
-    }
-  };
-};
-
-export const calculateContributionPoint = (
-  monthlyGrossSalary: number,
-  averageGrossSalary: number
-): number => {
-  return monthlyGrossSalary / averageGrossSalary;
 };

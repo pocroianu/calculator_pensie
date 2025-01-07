@@ -1,11 +1,11 @@
 export type WorkingCondition = 'normal' | 'special' | 'difficult' | 'veryDifficult';
-export type NonContributivePeriodType = 'military' | 'university' | 'childCare' | 'medical';
+export type NonContributivePeriodType = 'military' | 'university' | 'childCare' | 'medical' | '';
 
 export interface ContributionPeriod {
   fromDate: string;
   toDate: string;
-  company: string;
-  monthlyGrossSalary: number;
+  company?: string;
+  monthlyGrossSalary?: number;
   workingCondition?: WorkingCondition;
   nonContributiveType?: NonContributivePeriodType;
 }

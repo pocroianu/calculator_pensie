@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { PensionInputs } from '../types/pensionTypes';
 import { 
   calculateMonthlyPension, 
-  NonContributivePeriod,
 } from '../utils/pensionCalculations';
 import { isRetired } from '../utils/dateCalculations';
 
@@ -22,6 +21,11 @@ export const usePensionCalculator = () => {
     birthDate: '1996-08-26',
     retirementYear: currentYear + 35,
     contributionPeriods: [
+      {
+        fromDate: '2015-09-01' ,
+        toDate: '2019-06-30',
+        nonContributiveType: 'university',
+      },
       {
         fromDate: '2018-01-01' ,
         toDate: '2020-12-31',
