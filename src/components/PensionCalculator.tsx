@@ -16,7 +16,7 @@ const PensionCalculator = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-gray-200 mb-6">
+      <div className="border-gray-200 mb-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="p-6">
