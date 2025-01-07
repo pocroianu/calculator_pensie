@@ -1,6 +1,7 @@
 import { Calculator } from 'lucide-react';
 import InputForm from './InputForm';
 import PensionStats from './PensionStats';
+import PensionCharts from './PensionCharts';
 import { usePensionCalculator } from '../hooks/usePensionCalculator';
 
 const PensionCalculator = () => {
@@ -10,7 +11,6 @@ const PensionCalculator = () => {
     monthlyPension,
     yearlyPension,
     pensionDetails,
-    yearsUntilRetirement
   } = usePensionCalculator();
 
   return (
@@ -37,22 +37,28 @@ const PensionCalculator = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Input Form */}
-          <div className="lg:sticky lg:top-6 h-fit">
-            <InputForm
-              inputs={inputs}
-              onChange={handleInputChange}
-            />
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Input Form */}
+            <div className="lg:sticky lg:top-6">
+              <InputForm
+                inputs={inputs}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
 
-          {/* Stats */}
-          <div>
+          {/* Right Column */}
+          <div className="space-y-6">
             <PensionStats
               monthlyPension={monthlyPension}
               pensionDetails={pensionDetails}
               inputs={inputs}
+            />
+            <PensionCharts
+              contributionPeriods={inputs.contributionPeriods}
             />
           </div>
         </div>
