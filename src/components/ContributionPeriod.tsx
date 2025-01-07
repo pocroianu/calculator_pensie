@@ -1,4 +1,4 @@
-import { HelpCircle, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { ContributionPeriod as ContributionPeriodType, WorkingCondition, NonContributivePeriodType } from '../types/pensionTypes';
 import Tooltip from './Tooltip';
 import { useMemo } from 'react';
@@ -9,21 +9,24 @@ interface Props {
   onRemove: () => void;
 }
 
-export const ContributionPeriod: React.FC<Props> = ({ period, onUpdate, onRemove }) => {
-  const handleChange = (field: keyof ContributionPeriodType, value: string | number) => {
+const ContributionPeriod: React.FC<Props> = ({ period, onUpdate, onRemove}) => {
+  const handleChange = (
+    field: keyof ContributionPeriodType,
+    value: typeof field extends 'nonContributiveType' ? NonContributivePeriodType : string | number
+  ) => {
     if (field === 'nonContributiveType') {
       // Reset salary and working condition when switching to non-contributive
       if (value) {
         onUpdate({
           ...period,
-          [field]: value,
+          [field as NonContributivePeriodType]: value,
           monthlyGrossSalary: 0,
           workingCondition: 'normal'
         });
       } else {
         onUpdate({
           ...period,
-          [field]: value
+          [field as NonContributivePeriodType]: value
         });
       }
     } else {
@@ -166,3 +169,5 @@ export const ContributionPeriod: React.FC<Props> = ({ period, onUpdate, onRemove
     </div>
   );
 };
+
+export default ContributionPeriod;
