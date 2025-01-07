@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calculator } from 'lucide-react';
 import InputForm from './InputForm';
 import PensionStats from './PensionStats';
@@ -43,13 +42,9 @@ const PensionCalculator = () => {
           {/* Stats */}
           <div>
             <PensionStats
-              birthDate={inputs.birthDate}
-              retirementYear={inputs.retirementYear}
-              contributionPeriods={inputs.contributionPeriods}
               monthlyPension={monthlyPension}
-              yearlyPension={yearlyPension}
               pensionDetails={pensionDetails}
-              yearsUntilRetirement={yearsUntilRetirement}
+              inputs={inputs}
             />
           </div>
         </div>

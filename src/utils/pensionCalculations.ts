@@ -6,7 +6,11 @@ export const GROUP_II_BONUS = 0.25; // 25% bonus for Group II work
 export const GROUP_I_BONUS = 0.50; // 50% bonus for Group I work
 export const SPECIAL_CONDITIONS_BONUS = 0.50; // 50% bonus for special conditions
 
-export const MINIMUM_CONTRIBUTION_YEARS = 25; // Changed from 15 to 25 as per new rules
+// Constants based on Article 47
+export const MINIMUM_CONTRIBUTION_YEARS = 15;  // Stagiul minim de cotizare contributiv
+export const COMPLETE_CONTRIBUTION_YEARS = 35; // Stagiul complet de cotizare contributiv
+export const RETIREMENT_AGE = 65;             // Vârsta standard de pensionare
+
 export const TIER1_START = 26;
 export const TIER1_END = 30;
 export const TIER2_START = 31;
@@ -49,53 +53,89 @@ export const calculateMonthlyPension = (
   let contributionPoints = 0;
   let stabilityPoints = 0;
   let nonContributivePoints = 0;
+  let totalContributiveYears = 0;
+  let error: string | undefined;
+
+  // Calculate current age
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let currentAge = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    currentAge--;
+  }
+
+  // Calculate years until retirement
+  const yearsUntilRetirement = RETIREMENT_AGE - currentAge;
 
   // Calculate contribution points and non-contributive points
   contributionPeriods.forEach((period: ContributionPeriod) => {
+    const numberOfYears = period.fromDate && period.toDate ? 
+      (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+
     if (period.nonContributiveType) {
       // Handle non-contributive periods
-      let numberOfYears = period.fromDate && period.toDate ? 
-        (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
-      
       switch (period.nonContributiveType) {
         case 'military':
         case 'university':
-          nonContributivePoints += numberOfYears * 0.25; // 0.25 points per year
+        case 'childCare':
+          nonContributivePoints += numberOfYears * 0.25; // 0.25 points per year for all these types
           break;
         case 'medical':
           nonContributivePoints += numberOfYears * 0.20; // 0.20 points per year
           break;
-        case 'childCare':
-          nonContributivePoints += numberOfYears * 0.25; // 0.30 points per year
-          break;
       }
-    } else {
+    } else if (period.monthlyGrossSalary) {
       // Handle regular contribution periods
+      totalContributiveYears += numberOfYears;
       let point = calculateContributionPoint(period.monthlyGrossSalary, AVERAGE_GROSS_SALARY_2024);
-      let numberOfYears = period.fromDate && period.toDate ? 
-        (new Date(period.toDate).getTime() - new Date(period.fromDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25) : 0;
       contributionPoints += point * numberOfYears;
     }
   });
 
-  // Calculate stability points
-  stabilityPoints = calculateStabilityPoints(
-    contributionPeriods.filter(p => !p.nonContributiveType), // Only consider contributive periods
-    birthDate
-  );
+  // Only calculate stability points if minimum contribution years are met
+  if (totalContributiveYears >= MINIMUM_CONTRIBUTION_YEARS) {
+    stabilityPoints = calculateStabilityPoints(
+      contributionPeriods.filter(p => !p.nonContributiveType), 
+      birthDate
+    );
+  }
 
-  totalPoints = 
-    contributionPoints + 
-    stabilityPoints +
-    nonContributivePoints;
+  totalPoints = contributionPoints + stabilityPoints + nonContributivePoints;
+
+  // According to Article 47, check if minimum contribution years are met
+  if (totalContributiveYears < MINIMUM_CONTRIBUTION_YEARS) {
+    error = `You need ${Math.ceil(MINIMUM_CONTRIBUTION_YEARS - totalContributiveYears)} more years to reach the minimum contribution period of ${MINIMUM_CONTRIBUTION_YEARS} years`;
+    return {
+      monthlyPension: 0,
+      details: {
+        contributionPoints: 0,
+        stabilityPoints: 0,
+        nonContributivePoints: 0,
+        totalPoints: 0,
+        totalContributiveYears,
+        monthlyPension: 0,
+        currentAge,
+        yearsUntilRetirement,
+        error
+      }
+    };
+  }
+
+  const monthlyPension = totalPoints * REFERENCE_VALUE_2024;
 
   return {
-    monthlyPension: Math.round(totalPoints * 81),
+    monthlyPension,
     details: {
       contributionPoints,
       stabilityPoints,
+      nonContributivePoints,
       totalPoints,
-      nonContributivePoints
+      totalContributiveYears,
+      monthlyPension,
+      currentAge,
+      yearsUntilRetirement,
+      error
     }
   };
 };

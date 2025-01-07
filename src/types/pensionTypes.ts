@@ -21,4 +21,9 @@ export interface PensionDetails {
   stabilityPoints: number;
   nonContributivePoints: number;
   totalPoints: number;
+  totalContributiveYears?: number;
+  monthlyPension: number;
+  currentAge?: number;
+  yearsUntilRetirement?: number;
+  error?: string;
 }

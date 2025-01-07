@@ -45,8 +45,6 @@ export const usePensionCalculator = () => {
 
   const [monthlyPension, setMonthlyPension] = useState<number>(0);
   const [yearlyPension, setYearlyPension] = useState<number>(0);
-  const [yearsUntilRetirement, setYearsUntilRetirement] = useState<number>(0);
-  const [contributionPoints, setContributionPoints] = useState<number>(0);
   const [pensionDetails, setPensionDetails] = useState<PensionDetails>({
     contributionPoints: 0,
     stabilityPoints: 0,
@@ -54,14 +52,6 @@ export const usePensionCalculator = () => {
   });
 
   useEffect(() => {
-    // Update years until retirement
-    const birthDate = new Date(inputs.birthDate);
-    const retired = isRetired(birthDate.getFullYear().toString());
-    const yearsUntil = retired ? 0 : inputs.retirementYear - currentYear;
-
-    setYearsUntilRetirement(yearsUntil);
-
-
     // Calculate pension
     const result = calculateMonthlyPension(
       inputs.contributionPeriods,
@@ -71,7 +61,7 @@ export const usePensionCalculator = () => {
     setMonthlyPension(result.monthlyPension);
     setYearlyPension(result.monthlyPension * 12);
     setPensionDetails(result.details);
-  }, [inputs, currentYear]);
+  }, [inputs]);
 
   const handleInputChange = (field: keyof PensionInputs, value: any) => {
     setInputs(prev => ({
@@ -85,8 +75,6 @@ export const usePensionCalculator = () => {
     handleInputChange,
     monthlyPension,
     yearlyPension,
-    yearsUntilRetirement,
-    contributionPoints,
     pensionDetails,
     averageGrossSalary: AVERAGE_GROSS_SALARY_2024
   };
