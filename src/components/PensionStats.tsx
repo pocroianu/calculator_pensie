@@ -93,6 +93,11 @@ const PensionStats: React.FC<Props> = ({
             </div>
 
             <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Retirement age:</span>
+              <span className="text-sm font-medium">{65} years</span>
+            </div>
+
+            <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Total Points:</span>
               <span className="text-sm font-medium">{pensionDetails.totalPoints.toFixed(2)}</span>
             </div>
@@ -109,7 +114,7 @@ const PensionStats: React.FC<Props> = ({
 
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Non-Contributive Points:</span>
-              <span className="text-sm font-medium">{pensionDetails.nonContributivePoints.toFixed(2)}</span>
+              <span className="text-sm font-medium">{pensionDetails.nonContributivePoints}</span>
             </div>
 
 
